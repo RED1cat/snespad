@@ -95,9 +95,11 @@ int main(void)
 
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
+  // buttons B(0), Y(1), Sel(2), St(3), U(4), D(5), L(6), R(7), A(8), X(9), L(10), R(11)
   uint16_t current_buttons = 0xFFFF;
-  current_buttons &= ~(1 << 8);
+  current_buttons &= ~(1 << 2);
   current_buttons &= ~(1 << 0);
+  current_buttons &= ~(1 << 5);
   update_snes_buttons(current_buttons);
   /* USER CODE END 2 */
 
@@ -231,13 +233,13 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : P2_CLOCK_Pin P1_CLOCK_Pin */
   GPIO_InitStruct.Pin = P2_CLOCK_Pin|P1_CLOCK_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : P2_LATCH_Pin P1_LATCH_Pin */
   GPIO_InitStruct.Pin = P2_LATCH_Pin|P1_LATCH_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
