@@ -40,6 +40,11 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+SPI_HandleTypeDef hspi1;
+SPI_HandleTypeDef hspi2;
+DMA_HandleTypeDef hdma_spi1_tx;
+DMA_HandleTypeDef hdma_spi2_tx;
+
 PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
@@ -49,15 +54,17 @@ PCD_HandleTypeDef hpcd_USB_FS;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USB_PCD_Init(void);
+static void MX_SPI2_Init(void);
+static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-volatile uint16_t snes_button_state = 0xFFFF;
-volatile uint8_t bit_counter = 0;
+volatile uint16_t snes_button_state = 0xAAAA;
 /* USER CODE END 0 */
 
 /**
@@ -89,18 +96,24 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USB_PCD_Init();
+  MX_SPI2_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   tud_init(BOARD_TUD_RHPORT);
 
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
-  // buttons B(0), Y(1), Sel(2), St(3), U(4), D(5), L(6), R(7), A(8), X(9), L(10), R(11)
-  uint16_t current_buttons = 0xFFFF;
-  current_buttons &= ~(1 << 2);
-  current_buttons &= ~(1 << 0);
-  current_buttons &= ~(1 << 5);
-  update_snes_buttons(current_buttons);
+  // nes  A(15), B(14), START(13), SELECT(12), UP(11), DOWN(10), LEFT(9), RIGHT(8)
+  // snes B(15), Y(14), START(13), SELECT(12), UP(11), DOWN(10), LEFT(9), RIGHT(8), A(7), X(6), L(5), R(4)
+  //uint8_t current_buttons = 0xFF;
+  snes_button_state = 0xFFFF;
+  snes_button_state &= ~(1 << 15);
+  snes_button_state &= ~(1 << 7);
+  //current_buttons &= ~(1 << 5);
+  //update_snes_buttons(current_buttons);
+  HAL_SPI_Transmit_DMA(&hspi2, &snes_button_state, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -163,6 +176,80 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_SLAVE;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_16BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_HARD_INPUT;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
+  * @brief SPI2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI2_Init(void)
+{
+
+  /* USER CODE BEGIN SPI2_Init 0 */
+
+  /* USER CODE END SPI2_Init 0 */
+
+  /* USER CODE BEGIN SPI2_Init 1 */
+
+  /* USER CODE END SPI2_Init 1 */
+  /* SPI2 parameter configuration*/
+  hspi2.Instance = SPI2;
+  hspi2.Init.Mode = SPI_MODE_SLAVE;
+  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi2.Init.DataSize = SPI_DATASIZE_16BIT;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi2.Init.NSS = SPI_NSS_HARD_INPUT;
+  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi2.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI2_Init 2 */
+
+  /* USER CODE END SPI2_Init 2 */
+
+}
+
+/**
   * @brief USB Initialization Function
   * @param None
   * @retval None
@@ -194,6 +281,25 @@ static void MX_USB_PCD_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
+  /* DMA1_Channel5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -208,14 +314,11 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, P2_DATA_Pin|P1_DATA_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : LED_Pin */
   GPIO_InitStruct.Pin = LED_Pin;
@@ -223,29 +326,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : P2_DATA_Pin P1_DATA_Pin */
-  GPIO_InitStruct.Pin = P2_DATA_Pin|P1_DATA_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : P2_CLOCK_Pin P1_CLOCK_Pin */
-  GPIO_InitStruct.Pin = P2_CLOCK_Pin|P1_CLOCK_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : P2_LATCH_Pin P1_LATCH_Pin */
-  GPIO_InitStruct.Pin = P2_LATCH_Pin|P1_LATCH_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
@@ -265,41 +345,6 @@ void update_snes_buttons(uint16_t new_state)
 //--------------------------------------------------------------------+
 // Device callbacks
 //--------------------------------------------------------------------+
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	if (GPIO_Pin == P1_LATCH_Pin)
-	{
-		bit_counter = 0;
-
-		if ((snes_button_state & (1 << bit_counter)) == 0)
-		{
-			HAL_GPIO_WritePin(P1_DATA_GPIO_Port, P1_DATA_Pin, GPIO_PIN_RESET);
-		}
-		else
-		{
-			HAL_GPIO_WritePin(P1_DATA_GPIO_Port, P1_DATA_Pin, GPIO_PIN_SET);
-		}
-		bit_counter++;
-	}
-
-	else if (GPIO_Pin == P1_CLOCK_Pin)
-	{
-		if (bit_counter < 16)
-		{
-			if ((snes_button_state & (1 << bit_counter)) == 0)
-			{
-				HAL_GPIO_WritePin(P1_DATA_GPIO_Port, P1_DATA_Pin, GPIO_PIN_RESET);
-			}
-			else
-			{
-				HAL_GPIO_WritePin(P1_DATA_GPIO_Port, P1_DATA_Pin, GPIO_PIN_SET);
-			}
-			bit_counter++;
-		}
-	}
-}
-
 // Invoked when device is mounted
 void tud_mount_cb(void)
 {
@@ -356,7 +401,8 @@ void tud_hid_set_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t rep
   (void) report_type;
 
   // echo back anything we received from host
-  tud_hid_report(0, buffer, bufsize);
+  snes_button_state =  buffer[0] | (buffer[1] << 8);
+  tud_hid_report(0, &snes_button_state, CFG_TUD_HID_EP_BUFSIZE);
 }
 /* USER CODE END 4 */
 
@@ -371,6 +417,8 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+	  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	  HAL_Delay(3000);
   }
   /* USER CODE END Error_Handler_Debug */
 }

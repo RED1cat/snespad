@@ -61,22 +61,18 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define LED_Pin GPIO_PIN_13
 #define LED_GPIO_Port GPIOC
-#define P2_DATA_Pin GPIO_PIN_9
-#define P2_DATA_GPIO_Port GPIOA
-#define P1_DATA_Pin GPIO_PIN_10
-#define P1_DATA_GPIO_Port GPIOA
-#define P2_CLOCK_Pin GPIO_PIN_6
-#define P2_CLOCK_GPIO_Port GPIOB
-#define P2_CLOCK_EXTI_IRQn EXTI9_5_IRQn
-#define P1_CLOCK_Pin GPIO_PIN_7
-#define P1_CLOCK_GPIO_Port GPIOB
-#define P1_CLOCK_EXTI_IRQn EXTI9_5_IRQn
-#define P2_LATCH_Pin GPIO_PIN_8
-#define P2_LATCH_GPIO_Port GPIOB
-#define P2_LATCH_EXTI_IRQn EXTI9_5_IRQn
-#define P1_LATCH_Pin GPIO_PIN_9
+#define P1_LATCH_Pin GPIO_PIN_12
 #define P1_LATCH_GPIO_Port GPIOB
-#define P1_LATCH_EXTI_IRQn EXTI9_5_IRQn
+#define P1_CLOCK_Pin GPIO_PIN_13
+#define P1_CLOCK_GPIO_Port GPIOB
+#define P1_DATA_Pin GPIO_PIN_14
+#define P1_DATA_GPIO_Port GPIOB
+#define P2_LATCH_Pin GPIO_PIN_15
+#define P2_LATCH_GPIO_Port GPIOA
+#define P2_CLOCK_Pin GPIO_PIN_3
+#define P2_CLOCK_GPIO_Port GPIOB
+#define P2_DATA_Pin GPIO_PIN_4
+#define P2_DATA_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
