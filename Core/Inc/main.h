@@ -38,7 +38,7 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-void update_snes_buttons(uint16_t new_state);
+void update_snes_buttons(uint16_t p1, uint16_t p2);
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

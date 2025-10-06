@@ -64,7 +64,11 @@ static void MX_SPI1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-volatile uint16_t snes_button_state = 0xAAAA;
+// nes  A(15), B(14), START(13), SELECT(12), UP(11), DOWN(10), LEFT(9), RIGHT(8)
+// snes B(15), Y(14), START(13), SELECT(12), UP(11), DOWN(10), LEFT(9), RIGHT(8), A(7), X(6), L(5), R(4)
+//current_buttons &= ~(1 << 5);
+volatile uint16_t p1_snes_button_state = 0xFFFF;
+volatile uint16_t p2_snes_button_state = 0xFFFF;
 /* USER CODE END 0 */
 
 /**
@@ -105,15 +109,8 @@ int main(void)
 
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
-  // nes  A(15), B(14), START(13), SELECT(12), UP(11), DOWN(10), LEFT(9), RIGHT(8)
-  // snes B(15), Y(14), START(13), SELECT(12), UP(11), DOWN(10), LEFT(9), RIGHT(8), A(7), X(6), L(5), R(4)
-  //uint8_t current_buttons = 0xFF;
-  snes_button_state = 0xFFFF;
-  snes_button_state &= ~(1 << 15);
-  snes_button_state &= ~(1 << 7);
-  //current_buttons &= ~(1 << 5);
-  //update_snes_buttons(current_buttons);
-  HAL_SPI_Transmit_DMA(&hspi2, &snes_button_state, 1);
+  HAL_SPI_Transmit_DMA(&hspi2, &p1_snes_button_state, 1);
+  HAL_SPI_Transmit_DMA(&hspi1, &p2_snes_button_state, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -334,10 +331,11 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void update_snes_buttons(uint16_t new_state)
+void update_snes_buttons(uint16_t p1, uint16_t p2)
 {
     __disable_irq();
-    snes_button_state = new_state;
+    p1_snes_button_state = p1;
+    p2_snes_button_state = p2;
     HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
     __enable_irq();
 }
@@ -400,9 +398,10 @@ void tud_hid_set_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t rep
   (void) report_id;
   (void) report_type;
 
+  update_snes_buttons((buffer[0] | (buffer[1] << 8)), (buffer[2] | (buffer[3] << 8)));
+
   // echo back anything we received from host
-  snes_button_state =  buffer[0] | (buffer[1] << 8);
-  tud_hid_report(0, &snes_button_state, CFG_TUD_HID_EP_BUFSIZE);
+  tud_hid_report(0, &buffer, bufsize);
 }
 /* USER CODE END 4 */
 
