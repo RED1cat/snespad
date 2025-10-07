@@ -64,8 +64,8 @@ static void MX_SPI1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-// nes  A(15), B(14), START(13), SELECT(12), UP(11), DOWN(10), LEFT(9), RIGHT(8)
-// snes B(15), Y(14), START(13), SELECT(12), UP(11), DOWN(10), LEFT(9), RIGHT(8), A(7), X(6), L(5), R(4)
+// nes  A(15), B(14), SELECT(13), START(12), UP(11), DOWN(10), LEFT(9), RIGHT(8)
+// snes B(15), Y(14), SELECT(13), START(12), UP(11), DOWN(10), LEFT(9), RIGHT(8), A(7), X(6), L(5), R(4) 3 2 1 0
 //current_buttons &= ~(1 << 5);
 volatile uint16_t p1_snes_button_state = 0xFFFF;
 volatile uint16_t p2_snes_button_state = 0xFFFF;
@@ -401,7 +401,7 @@ void tud_hid_set_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t rep
   update_snes_buttons((buffer[0] | (buffer[1] << 8)), (buffer[2] | (buffer[3] << 8)));
 
   // echo back anything we received from host
-  tud_hid_report(0, &buffer, bufsize);
+  tud_hid_report(0, buffer, bufsize);
 }
 /* USER CODE END 4 */
 
